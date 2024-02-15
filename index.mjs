@@ -69,7 +69,7 @@ async function get_existing_user_data(user_id) {
         const params = {
             TableName: 'leaderboard',
             Key: { user_id },
-            ProjectionExpression: 'user_id, bucket, skills_season, aggregate_skills_season'
+            ProjectionExpression: 'user_id, bucket_id, skills_season, aggregate_skills_season'
         };
 
         // Get item from DynamoDB table
@@ -145,31 +145,31 @@ async function update_user_data(current_data, new_data) {
     }
 }
 
-async function update_positions(bucket) {
-    try {
-        // Query users in the same bucket
-        const users_in_bucket = await get_bucket_users(bucket);
+// async function update_positions(bucket) {
+//     try {
+//         // Query users in the same bucket
+//         const users_in_bucket = await get_bucket_users(bucket);
 
-        // Sort users by aggregate score in descending order
-        users_in_bucket.sort((a, b) => b.aggregateScore - a.aggregateScore);
+//         // Sort users by aggregate score in descending order
+//         users_in_bucket.sort((a, b) => b.aggregateScore - a.aggregateScore);
 
-        // Update positions based on ranking in the sorted list
-        users_in_bucket.forEach((user, index) => {
-            const new_pos = index + 1; // Positions start from 1
-            if (user.position !== new_pos) {
-                user.position = new_pos; // Update position
-            }
-        });
+//         // Update positions based on ranking in the sorted list
+//         users_in_bucket.forEach((user, index) => {
+//             const new_pos = index + 1; // Positions start from 1
+//             if (user.position !== new_pos) {
+//                 user.position = new_pos; // Update position
+//             }
+//         });
 
-        // Update positions in DynamoDB table
-        await updatePositionsInDynamoDB(users_in_bucket);
+//         // Update positions in DynamoDB table
+//         await updatePositionsInDynamoDB(users_in_bucket);
 
-        console.log(`Positions updated for users in bucket ${bucket}`);
-    } catch (error) {
-        console.error('Error updating positions:', error);
-        throw error;
-    }
-}
+//         console.log(`Positions updated for users in bucket ${bucket}`);
+//     } catch (error) {
+//         console.error('Error updating positions:', error);
+//         throw error;
+//     }
+// }
 
 
 // // Function to query users in the same bucket from DynamoDB table
