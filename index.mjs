@@ -172,56 +172,56 @@ async function update_positions(bucket) {
 }
 
 
-// Function to query users in the same bucket from DynamoDB table
-async function get_bucket_users(bucket) {
-    try {
-        // Define DynamoDB query parameters
-        const params = {
-            TableName: 'leaderboard',
-            IndexName: 'bucket-index', // Assuming you have an index on the bucket column
-            KeyConditionExpression: '#bucket = :bucketValue',
-            ExpressionAttributeNames: {
-                '#bucket': 'bucket'
-            },
-            ExpressionAttributeValues: {
-                ':bucketValue': bucket
-            }
-        };
+// // Function to query users in the same bucket from DynamoDB table
+// async function get_bucket_users(bucket) {
+//     try {
+//         // Define DynamoDB query parameters
+//         const params = {
+//             TableName: 'leaderboard',
+//             IndexName: 'bucket-index', // Assuming you have an index on the bucket column
+//             KeyConditionExpression: '#bucket = :bucketValue',
+//             ExpressionAttributeNames: {
+//                 '#bucket': 'bucket'
+//             },
+//             ExpressionAttributeValues: {
+//                 ':bucketValue': bucket
+//             }
+//         };
 
-        // Query users in the same bucket
-        const data = await dynamoDB.query(params).promise();
+//         // Query users in the same bucket
+//         const data = await dynamo_db.query(params).promise();
 
-        return data.Items; // Return the list of users
-    } catch (error) {
-        console.error('Error querying users:', error);
-        throw error;
-    }
-}
+//         return data.Items; // Return the list of users
+//     } catch (error) {
+//         console.error('Error querying users:', error);
+//         throw error;
+//     }
+// }
 
 
-// Function to update positions in DynamoDB table
-async function updatePositionsInDynamoDB(users) {
-    try {
-        // Update positions for each user in the list
-        const updatePromises = users.map(user => {
-            const params = {
-                TableName: 'your-dynamodb-table-name',
-                Key: { user_id: user.user_id }, // Assuming user_id is the primary key
-                UpdateExpression: 'SET #position = :positionValue',
-                ExpressionAttributeNames: {
-                    '#position': 'position'
-                },
-                ExpressionAttributeValues: {
-                    ':positionValue': user.position
-                }
-            };
-            return dynamoDB.update(params).promise();
-        });
+// // Function to update positions in DynamoDB table
+// async function updatePositionsInDynamoDB(users) {
+//     try {
+//         // Update positions for each user in the list
+//         const updatePromises = users.map(user => {
+//             const params = {
+//                 TableName: 'your-dynamodb-table-name',
+//                 Key: { user_id: user.user_id }, // Assuming user_id is the primary key
+//                 UpdateExpression: 'SET #position = :positionValue',
+//                 ExpressionAttributeNames: {
+//                     '#position': 'position'
+//                 },
+//                 ExpressionAttributeValues: {
+//                     ':positionValue': user.position
+//                 }
+//             };
+//             return dynamoDB.update(params).promise();
+//         });
 
-        // Execute all update operations in parallel
-        await Promise.all(updatePromises);
-    } catch (error) {
-        console.error('Error updating positions in DynamoDB:', error);
-        throw error;
-    }
-}
+//         // Execute all update operations in parallel
+//         await Promise.all(updatePromises);
+//     } catch (error) {
+//         console.error('Error updating positions in DynamoDB:', error);
+//         throw error;
+//     }
+// }
