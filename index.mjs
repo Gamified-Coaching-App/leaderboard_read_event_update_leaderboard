@@ -105,10 +105,10 @@ async function add_user(user_id) {
 
 
 // Function to update data into DynamoDB
-async function update_user_data(user_id, current_data, new_data) {
+async function update_user_data(current_data, new_data) {
 
     // Extract new data
-    const user_id = new_data.user_id;
+    const id = new_data.user_id;
     const distance_in_meters = new_data.distance_in_meters;
 
     // Calculate additions to individual skills
@@ -127,7 +127,7 @@ async function update_user_data(user_id, current_data, new_data) {
     const params = {
         TableName: "leaderboard",
         Key: {
-            user_id: user_id
+            user_id: id
         },
         UpdateExpression: "SET skills_season = :skills, aggregate_skills_season = :aggregate",
         ExpressionAttributeValues: {
