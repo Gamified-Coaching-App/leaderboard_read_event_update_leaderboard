@@ -26,11 +26,11 @@ export const handler = async (event) => {
     //     };
     // }
     /////////////////////////////////////////////////////////////////
-    const user_id = event.detail.user_id;
+    // const user_id = event.detail.user_id;
 
     try {
         // Check if the user exists in the DynamoDB table
-        const current_data = await get_existing_user_data(user_id);
+        // const current_data = await get_existing_user_data(user_id);
 
         // // If the user doesn't exist, add a new row for them and add special bucketing logic
         // if (!current_data) {
@@ -39,7 +39,7 @@ export const handler = async (event) => {
         // }
 
         // Update user with the updated data
-        await update_user_data(user_id, current_data, event.detail);
+        await update_user_data(event.detail);
         console.log("Table updated!");
 
         // Update bucketing and positions
@@ -63,7 +63,7 @@ export const handler = async (event) => {
 
 
 
-async function update_user_data(dynamo_db, new_data) {
+async function update_user_data(new_data) {
     // Extract new data
     const id = new_data.user_id;
     const distance_in_km = new_data.distance_in_meters / 1000;
