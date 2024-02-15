@@ -62,77 +62,22 @@ export const handler = async (event) => {
 };
 
 
-// Function to retrieve user data from DynamoDB table
-async function get_existing_user_data(user_id) {
-    try {
-        // Define DynamoDB get parameters
-        const params = {
-            TableName: 'leaderboard',
-            Key: { user_id },
-            ProjectionExpression: 'user_id, bucket_id, skills_season, aggregate_skills_season'
-        };
 
-        // Get item from DynamoDB table
-        const data = await dynamo_db.get(params).promise();
-
-        return data; // Return user data if it exists, or null if not found
-
-    } catch (error) {
-        console.error("User doesn't exist yet!", error);
-        throw error;
-    }
-}
-
-
-// Function to add a new row for the user in DynamoDB table
-async function add_user(user_id) {
-    try {
-        // Define DynamoDB put parameters for adding a new row
-        const params = {
-            TableName: 'leaderboard',
-            Item: { user_id } // Assuming userId is the primary key
-        };
-
-        // Add item to DynamoDB table
-        await dynamo_db.put(params).promise();
-
-        console.log(`New row added for user ${user_id}`);
-    } catch (error) {
-        console.error('Error adding user:', error);
-        throw error;
-    }
-}
-
-
-// Function to update data into DynamoDB
-async function update_user_data(current_data, new_data) {
-
+async function update_user_data(dynamo_db, new_data) {
     // Extract new data
     const id = new_data.user_id;
-    const distance_in_meters = new_data.distance_in_meters;
+    const distance_in_km = new_data.distance_in_meters / 1000;
 
-    // Calculate additions to individual skills
-    const endurance_updated = current_data.skills_season.endurance + distance_in_meters / 1000;
-
-    // Compute new skills map
-    const new_skills = {
-        endurance: endurance_updated,
-        strength: current_data.skills_season.strength
-    };
-
-    // Calculate new aggregate
-    const aggregate_updated = endurance_updated;
-
-    // Now make the update to the table
+    // Prepare the update parameters for DynamoDB
+    // Now we are directly incrementing the endurance and aggregate_skills_season columns
     const params = {
         TableName: "leaderboard",
         Key: {
-            user_id: id
+            "user_id": id
         },
-        UpdateExpression: "SET skills_season = :skills, aggregate_skills_season = :aggregate",
+        UpdateExpression: "ADD endurance_season :distance, aggregate_skills_season :distance",
         ExpressionAttributeValues: {
-            ":skills": new_skills,
-            ":aggregate": aggregate_updated
+            ":distance": distance_in_km
         },
     };
 
@@ -141,9 +86,92 @@ async function update_user_data(current_data, new_data) {
         console.log('DynamoDB updated successfully');
     } catch (error) {
         console.error('Error updating DynamoDB:', error);
-        throw error; // Consider how to handle this error.
-    }
+        throw error; // Consider how to handle this error.
+    }
 }
+
+// // Function to retrieve user data from DynamoDB table
+// async function get_existing_user_data(user_id) {
+//     try {
+//         // Define DynamoDB get parameters
+//         const params = {
+//             TableName: 'leaderboard',
+//             Key: { user_id },
+//             ProjectionExpression: 'user_id, bucket_id, skills_season, aggregate_skills_season'
+//         };
+
+//         // Get item from DynamoDB table
+//         const data = await dynamo_db.get(params).promise();
+
+//         return data; // Return user data if it exists, or null if not found
+
+//     } catch (error) {
+//         console.error("User doesn't exist yet!", error);
+//         throw error;
+//     }
+// }
+
+
+// // Function to add a new row for the user in DynamoDB table
+// async function add_user(user_id) {
+//     try {
+//         // Define DynamoDB put parameters for adding a new row
+//         const params = {
+//             TableName: 'leaderboard',
+//             Item: { user_id } // Assuming userId is the primary key
+//         };
+
+//         // Add item to DynamoDB table
+//         await dynamo_db.put(params).promise();
+
+//         console.log(`New row added for user ${user_id}`);
+//     } catch (error) {
+//         console.error('Error adding user:', error);
+//         throw error;
+//     }
+// }
+
+
+// // Function to update data into DynamoDB
+// async function update_user_data(current_data, new_data) {
+
+//     // Extract new data
+//     const id = new_data.user_id;
+//     const distance_in_meters = new_data.distance_in_meters;
+
+//     // Calculate additions to individual skills
+//     const endurance_updated = current_data.skills_season.endurance + distance_in_meters / 1000;
+
+//     // Compute new skills map
+//     const new_skills = {
+//         'endurance': endurance_updated,
+//         'strength': current_data.skills_season.strength
+//     };
+
+//     // Calculate new aggregate
+//     const aggregate_updated = endurance_updated;
+
+//     // Now make the update to the table
+//     const params = {
+//         TableName: "leaderboard",
+//         Key: {
+//             user_id: id
+//         },
+//         UpdateExpression: "SET skills_season = :skills, aggregate_skills_season = :aggregate",
+//         ExpressionAttributeValues: {
+//             ":skills": new_skills,
+//             ":aggregate": aggregate_updated
+//         },
+//     };
+
+//     try {
+//         await dynamo_db.update(params).promise();
+//         console.log('DynamoDB updated successfully');
+//     } catch (error) {
+//         console.error('Error updating DynamoDB:', error);
+//         throw error; // Consider how to handle this error.
+//     }
+// }
 
 // async function update_positions(bucket) {
 //     try {
