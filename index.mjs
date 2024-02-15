@@ -1,52 +1,18 @@
-// Import statements for ES6
 import AWS from 'aws-sdk';
 
-const dynamo_db = new AWS.DynamoDB.DocumentClient();
+const dynamoDb = new AWS.DynamoDB.DocumentClient();
 
-// handler.mjs
 export const handler = async (event) => {
-    //////////////////////////////////////////////////////////////////////////  
-    // Output details to console log -> testing purposes
-    // try {
-    //     // Extract details from the event
-    //     const { user_id, timestamp_local, session_id, activity_type, distance_in_meters } = event.detail;
-
-    //     // Log extracted details to the console
-    //     console.log(`User ID: ${user_id}`);
-    //     console.log(`Timestamp: ${timestamp_local}`);
-    //     console.log(`Session ID: ${session_id}`);
-    //     console.log(`Activity Type: ${activity_type}`);
-    //     console.log(`Distance in Meters: ${distance_in_meters}`);
-    // } catch (error) {
-    //     console.error(`Error processing event: ${error}`);
-    //     // Handle the error appropriately
-    //     return {
-    //         statusCode: 500,
-    //         body: JSON.stringify('Error processing event')
-    //     };
-    // }
-    /////////////////////////////////////////////////////////////////
-    // const user_id = event.detail.user_id;
-
+    const userId = event.detail.user_id;
     try {
-        // Check if the user exists in the DynamoDB table
-        // const current_data = await get_existing_user_data(user_id);
-
-        // // If the user doesn't exist, add a new row for them and add special bucketing logic
-        // if (!current_data) {
-        //     console.log("User is not currently in our table!");
-        //     await add_user(user_id);
-        // }
-
         // Update user with the updated data
-        await update_user_data(event.detail);
-        console.log("Table updated!");
+        await updateUserData(event.detail);
+        console.log("User's aggregate skills updated!");
 
-        // Update bucketing and positions
-
-
-
-        console.log(`DB updated successfully`);
+        // Recalculate positions
+        const entries = await fetchAllLeaderboardEntries();
+        const updatedEntries = await updatePositions(entries);
+        console.log("Positions updated for ", updatedEntries.length, "users.");
     } catch (error) {
         console.error('Error updating', error);
         return {
@@ -61,34 +27,64 @@ export const handler = async (event) => {
     };
 };
 
-
-
-async function update_user_data(new_data) {
-    // Extract new data
-    const id = new_data.user_id;
-    const distance_in_km = new_data.distance_in_meters / 1000;
-
-    // Prepare the update parameters for DynamoDB
-    // Now we are directly incrementing the endurance and aggregate_skills_season columns
+async function updateUserData(newData) {
+    const { user_id, distance_in_meters } = newData;
+    const distanceInKm = distance_in_meters / 1000;
     const params = {
         TableName: "leaderboard",
-        Key: {
-            "user_id": id
-        },
-        UpdateExpression: "ADD endurance_season :distance, aggregate_skills_season :distance",
-        ExpressionAttributeValues: {
-            ":distance": distance_in_km
-        },
+        Key: { "user_id": user_id },
+        UpdateExpression: "ADD aggregate_skills_season :distance",
+        ExpressionAttributeValues: { ":distance": distanceInKm },
     };
 
-    try {
-        await dynamo_db.update(params).promise();
-        console.log('DynamoDB updated successfully');
-    } catch (error) {
-        console.error('Error updating DynamoDB:', error);
-        throw error; // Consider how to handle this error.
-    }
+    await dynamoDb.update(params).promise();
+    console.log('DynamoDB updated successfully for user:', user_id);
 }
+
+async function fetchAllLeaderboardEntries() {
+    const params = { TableName: "leaderboard" };
+    const entries = [];
+    let items;
+    do {
+        items = await dynamoDb.scan(params).promise();
+        entries.push(...items.Items);
+        params.ExclusiveStartKey = items.LastEvaluatedKey;
+    } while (items.LastEvaluatedKey);
+    
+    return entries;
+}
+
+async function updatePositions(entries) {
+    const sortedEntries = entries.sort((a, b) => b.aggregate_skills_season - a.aggregate_skills_season);
+    const updates = [];
+
+    for (let i = 0; i < sortedEntries.length; i++) {
+        const newPosition = i + 1;
+        if (sortedEntries[i].position_new !== newPosition) {
+            const updateParams = {
+                TableName: "leaderboard",
+                Key: { "user_id": sortedEntries[i].user_id },
+                UpdateExpression: "set position_old = if_not_exists(position_new, :pos), position_new = :newPos",
+                ExpressionAttributeValues: {
+                    ":pos": newPosition, // default if position_new doesn't exist
+                    ":newPos": newPosition,
+                },
+                ConditionExpression: "attribute_exists(user_id)" // Ensure item exists
+            };
+
+            updates.push(dynamoDb.update(updateParams).promise().catch(error => console.error('Update failed for user:', sortedEntries[i].user_id, error)));
+        }
+    }
+
+    await Promise.all(updates);
+    return updates.map((_, index) => sortedEntries[index].user_id); // Return updated user IDs
+}
+
+
+
+
+
+
 
 // // Function to retrieve user data from DynamoDB table
 // async function get_existing_user_data(user_id) {
