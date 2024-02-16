@@ -3,7 +3,7 @@ import AWS from 'aws-sdk';
 const dynamoDb = new AWS.DynamoDB.DocumentClient();
 
 export const handler = async (event) => {
-    const userId = event.detail.user_id;
+    // const userId = event.detail.user_id;
     try {
         // Update user with the updated data
         await updateUserData(event.detail);
