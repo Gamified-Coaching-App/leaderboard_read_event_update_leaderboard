@@ -41,8 +41,29 @@ async function updateUserData(newData) {
     console.log('DynamoDB updated successfully for user:', user_id);
 }
 
-async function fetchAllLeaderboardEntries() {
-    const params = { TableName: "leaderboard" };
+async function fetchAllLeaderboardEntries(newData) {
+    const { user_id } = newData;
+    // Get user_id's bucket_id
+    const userParams = {
+        TableName: "leaderboard",
+        Key: {
+            "user_id": user_id
+        }
+    };
+
+    const userData = await dynamoDb.get(userParams).promise();
+
+    const bucket_id = userData.Item.bucket_id;
+
+    // Retrieve relevant data from leaderboard
+    const params = {
+        TableName: "leaderboard",
+        FilterExpression: "user_id = :user_id AND bucket_id = :bucket_id",
+        ExpressionAttributeValues: {
+            ":user_id": user_id,
+            ":bucket_id": bucket_id
+        }
+    };
     const entries = [];
     let items;
     do {
