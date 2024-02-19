@@ -10,6 +10,7 @@ export const handler = async (event) => {
         console.log("User's aggregate skills updated!");
 
         // Recalculate positions
+        // TODO : maybe don't need to bother with computations if bucket_id = -1. bucket_id is retrieved in fetchAll.. function
         const entries = await fetchAllLeaderboardEntries();
         const updatedEntries = await updatePositions(entries);
         console.log("Positions updated for ", updatedEntries.length, "users.");
