@@ -29,12 +29,19 @@ export const handler = async (event) => {
 
 async function updateUserData(newData) {
     const { user_id, distance_in_meters } = newData;
+
+    // Compute skill points
     const distanceInKm = distance_in_meters / 1000;
+    const endurancePoints = distanceInKm;
+    const aggPoints = endurancePoints;
+
     const params = {
         TableName: "leaderboard",
         Key: { "user_id": user_id },
-        UpdateExpression: "ADD aggregate_skills_season :distance",
-        ExpressionAttributeValues: { ":distance": distanceInKm },
+        UpdateExpression: "ADD aggregate_skills_season :aggregate_skills, endurance_season :endurance_skills",
+        ExpressionAttributeValues: { 
+            ":aggregate_skills": aggPoints, 
+            ":endurance_skills": endurancePoints},
     };
 
     await dynamoDb.update(params).promise();
