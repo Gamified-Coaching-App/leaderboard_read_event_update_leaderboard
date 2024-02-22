@@ -12,7 +12,7 @@ export const handler = async (event) => {
         // Recalculate positions
         // TODO : maybe don't need to bother with computations if bucket_id = -1. bucket_id is retrieved in fetchAll.. function
         const entries = await fetchAllLeaderboardEntries(event.detail);
-        console.log(entries);
+        console.log("Entries are: ", entries);
         const updatedEntries = await updatePositions(entries);
         console.log("Positions updated for ", updatedEntries.length, "users.");
     } catch (error) {
@@ -71,9 +71,9 @@ async function fetchAllLeaderboardEntries(newData) {
     // Retrieve relevant data from leaderboard
     const params = {
         TableName: "leaderboard",
-        FilterExpression: "user_id = :user_id AND bucket_id = :bucket_id",
+        FilterExpression: "bucket_id = :bucket_id",
         ExpressionAttributeValues: {
-            ":user_id": user_id,
+            //":user_id": user_id,
             ":bucket_id": bucket_id
         }
     };
