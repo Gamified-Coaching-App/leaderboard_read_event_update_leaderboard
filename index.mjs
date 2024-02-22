@@ -12,6 +12,7 @@ export const handler = async (event) => {
         // Recalculate positions
         // TODO : maybe don't need to bother with computations if bucket_id = -1. bucket_id is retrieved in fetchAll.. function
         const entries = await fetchAllLeaderboardEntries(event.detail);
+        console.log(entries);
         const updatedEntries = await updatePositions(entries);
         console.log("Positions updated for ", updatedEntries.length, "users.");
     } catch (error) {
@@ -97,9 +98,10 @@ async function updatePositions(entries) {
             const updateParams = {
                 TableName: "leaderboard",
                 Key: { "user_id": sortedEntries[i].user_id },
-                UpdateExpression: "set position_old = if_not_exists(position_new, :pos), position_new = :newPos",
+                // UpdateExpression: "set position_new = if_not_exists(position_new, :pos), position_new = :newPos",
+                UpdateExpression: "set position_new = :newPos",
                 ExpressionAttributeValues: {
-                    ":pos": newPosition, // default if position_new doesn't exist
+                    // ":pos": newPosition, // default if position_new doesn't exist
                     ":newPos": newPosition,
                 },
                 ConditionExpression: "attribute_exists(user_id)" // Ensure item exists
