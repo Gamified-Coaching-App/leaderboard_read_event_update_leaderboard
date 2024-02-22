@@ -11,7 +11,7 @@ export const handler = async (event) => {
 
         // Recalculate positions
         // TODO : maybe don't need to bother with computations if bucket_id = -1. bucket_id is retrieved in fetchAll.. function
-        const entries = await fetchAllLeaderboardEntries();
+        const entries = await fetchAllLeaderboardEntries(event.detail);
         const updatedEntries = await updatePositions(entries);
         console.log("Positions updated for ", updatedEntries.length, "users.");
     } catch (error) {
@@ -64,9 +64,7 @@ async function fetchAllLeaderboardEntries(newData) {
             "user_id": user_id
         }
     };
-
     const userData = await dynamoDb.get(userParams).promise();
-
     const bucket_id = userData.Item.bucket_id;
 
     // Retrieve relevant data from leaderboard
