@@ -29,12 +29,18 @@ export const handler = async (event) => {
 };
 
 async function updateUserData(newData) {
-    const { user_id, distance_in_meters } = newData;
+    const { user_id, distance_in_meters, points_gained } = newData;
+    const points_gainedJSON = JSON.parse(points_gained);
 
     // Compute skill points
-    const distanceInKm = distance_in_meters / 1000;
-    const endurancePoints = distanceInKm;
-    const aggPoints = endurancePoints;
+    // const distanceInKm = distance_in_meters / 1000;
+    // const endurancePoints = distanceInKm;
+    // const aggPoints = endurancePoints;
+
+    const endurancePoints = parseInt(points_gainedJSON.endurance);
+    const aggPoints = parseInt(points_gainedJSON.total);
+    console.log(endurancePoints, typeof endurancePoints);
+    console.log(aggPoints, typeof aggPoints);
 
     const params = {
         TableName: "leaderboard",
